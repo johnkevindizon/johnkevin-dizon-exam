@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Channel</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+</head>
+<body>
+    <div id="app" class="container">
+        <section class="section">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="media">
+                            <div class="media-left">
+                                <figure class="image is-64x64">
+                                    <img :src="channel.profile_picture" alt="Profile Picture">
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <div class="content">
+                                    <p>
+                                        <strong>{{ channel.name }}</strong>
+                                        <br>
+                                        {{ channel.description }}
+                                    </p>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div v-for="video in paginatedVideos" class="box">
+                        <article class="media">
+                            <div class="media-left">
+                                <figure class="image is-64x64">
+                                    <img :src="video.thumbnail" alt="Thumbnail">
+                                </figure>
+                            </div>
+                            <div class="media-content">
+                                <div class="content">
+                                    <p>
+                                        <strong>{{ video.title }}</strong>
+                                        <br>
+                                        {{ video.description }}
+                                    </p>
+                                    <a :href="'https://www.youtube.com/watch?v=' + video.video_id" target="_blank">Watch Video</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                        <a class="pagination-previous" :disabled="currentPage === 1" @click="currentPage--">Previous</a>
+                        <a class="pagination-next" :disabled="currentPage === pageCount" @click="currentPage++">Next</a>
+                        <ul class="pagination-list">
+                            <li v-for="page in pageCount" :key="page">
+                                <a class="pagination-link" :class="{ 'is-current': currentPage === page }" @click="currentPage = page">{{ page }}</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                channel: {},
+                videos: [],
+                currentPage: 1,
+                perPage: 20
+            },
+            computed: {
+                paginatedVideos() {
+                    const start = (this.currentPage - 1) * this.perPage;
+                    const end = start + this.perPage;
+                    return this.videos.slice(start, end);
+                },
+                pageCount() {
+                    return Math.ceil(this.videos.length / this.perPage);
+                }
+            },
+            created() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const channelId = urlParams.get('channel_id');
+                
+                fetch(`youtube_channel_json.php?channel_id=${channelId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.channel = data.channel;
+                        this.videos = data.videos;
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
